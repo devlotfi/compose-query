@@ -1,4 +1,6 @@
 [versions]
+composeQuery = "1.0.0"
+composeRef = "1.0.0"
 kotlin = "2.4.21"
 agp = "9.4.1"
 coreKtx = "1.19.1"
@@ -8,9 +10,13 @@ espressoCore = "3.7.0"
 appcompat = "1.8.0"
 composeBom = "2026.09.00"
 activityCompose = "1.13.0"
+lifecycleViewmodelKtx = "2.11.0"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "lifecycleViewmodelKtx" }
+androidx-lifecycle-viewmodel-ktx = { module = "androidx.lifecycle:lifecycle-viewmodel-ktx", version.ref = "lifecycleViewmodelKtx" }
+compose-ref = { module = "com.github.devlotfi:compose-ref", version.ref = "composeRef" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
