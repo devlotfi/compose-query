@@ -1,4 +1,4 @@
-package com.example.todoapp.utils
+package com.devlotfi.composequery
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
