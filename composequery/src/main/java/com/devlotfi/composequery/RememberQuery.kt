@@ -7,6 +7,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import com.devlotfi.composequery.LocalQuery
 import com.devlotfi.composequery.NotifyAction
 import com.devlotfi.composeref.rememberRef
@@ -31,12 +33,14 @@ data class RememberQueryReturn<T>(
 @Composable
 fun <T> rememberQuery(
     queryFn: suspend () -> T?,
-    queryKey: List<Any?>
+    queryKey: List<Any?>,
+    refetchOnResume: Boolean = true
 ): RememberQueryReturn<T> {
     val localQuery = LocalQuery.current
     val scope = rememberCoroutineScope()
     val jobRef = rememberRef<Job?>(null)
     val requestCounter = rememberRef(0)
+    val skipNextResume = rememberRef(true)
     val initialCache = remember { localQuery.getCache(queryKey) }
     var loading by remember { mutableStateOf<Boolean>(initialCache == null) }
     var fetching by remember { mutableStateOf<Boolean>(initialCache == null) }
@@ -84,6 +88,14 @@ fun <T> rememberQuery(
     fun reset() {
         data = null
         fetchQuery()
+    }
+
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (skipNextResume.current) {
+            skipNextResume.current = false
+            return@LifecycleEventEffect
+        }
+        if (refetchOnResume) refetch()
     }
 
     DisposableEffect(queryKey, queryFn) {
