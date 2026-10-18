@@ -7,10 +7,10 @@ Fetch async data, share it across screens through a keyed cache, and keep it fre
 invalidation and mutations, all with a small, composable API.
 
 ```kotlin
-val users = rememberQuery(
-    queryFn = { api.getUsers() },
+val users = rememberQuery {
     queryKey = listOf("users")
-)
+    queryFn { api.getUsers() }
+}
 ```
 
 ## Features
@@ -69,14 +69,14 @@ class MainActivity : ComponentActivity() {
 ```kotlin
 @Composable
 fun UserListScreen() {
-    val query = rememberQuery(
-        queryFn = { api.getUsers() },      // suspend () -> List<User>?
+    val query = rememberQuery {
         queryKey = listOf("users")
-    )
+        queryFn { api.getUsers() }      // suspend () -> List<User>?
+    }
  
     when {
         query.loading -> CircularProgressIndicator()
-        query.error != null -> Text("Error: ${query.error?.message}")
+        query.error != null -> Text("Error: ${query.error!!.message}")
         else -> LazyColumn {
             items(query.data.orEmpty()) { user -> Text(user.name) }
         }
@@ -101,9 +101,11 @@ fun UserListScreen() {
  
 ### Parameters
  
+`rememberQuery` is configured inside its trailing lambda:
+ 
 | Parameter | Type | Default | Description |
 |---|---|---|---|
-| `queryFn` | `suspend () -> T?` | required | Function that loads the data. |
+| `queryFn { }` | `suspend () -> T?` | required | Function that loads the data. Set by calling `queryFn { ... }`. |
 | `queryKey` | `List<Any?>` | required | Cache key. Include every variable the query depends on. |
 | `refetchOnResume` | `Boolean` | `true` | Refetch when the lifecycle reaches `ON_RESUME` (the first resume is skipped, since the initial fetch already ran). |
  
@@ -114,10 +116,10 @@ Keys are lists, compared by equality. Put the parameters your query depends on i
 ```kotlin
 @Composable
 fun UserDetails(userId: Int) {
-    val query = rememberQuery(
-        queryFn = { api.getUser(userId) },
+    val query = rememberQuery {
         queryKey = listOf("users", userId)
-    )
+        queryFn { api.getUser(userId) }
+    }
     // ...
 }
 ```
@@ -132,10 +134,10 @@ Use `fetchInteractively` with `interactiveFetching` so a background refresh does
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun UserListScreen() {
-    val query = rememberQuery(
-        queryFn = { api.getUsers() },
+    val query = rememberQuery {
         queryKey = listOf("users")
-    )
+        queryFn { api.getUsers() }
+    }
  
     PullToRefreshBox(
         isRefreshing = query.interactiveFetching,
@@ -162,11 +164,11 @@ Column {
 ### Disabling refetch on resume
  
 ```kotlin
-val query = rememberQuery(
-    queryFn = { api.getSettings() },
-    queryKey = listOf("settings"),
+val query = rememberQuery {
+    queryKey = listOf("settings")
+    queryFn { api.getSettings() }
     refetchOnResume = false
-)
+}
 ```
  
 ### Shared data between screens
@@ -176,13 +178,19 @@ Two composables using the same key share one cache entry. Once one fetches, the 
 ```kotlin
 @Composable
 fun Header() {
-    val user = rememberQuery(queryFn = { api.getMe() }, queryKey = listOf("me"))
+    val user = rememberQuery {
+        queryKey = listOf("me")
+        queryFn { api.getMe() }
+    }
     Text(user.data?.name ?: "…")
 }
  
 @Composable
 fun ProfileScreen() {
-    val user = rememberQuery(queryFn = { api.getMe() }, queryKey = listOf("me"))
+    val user = rememberQuery {
+        queryKey = listOf("me")
+        queryFn { api.getMe() }
+    }
     // Shows cached data immediately if Header already loaded it
 }
 ```
@@ -198,14 +206,14 @@ fun ProfileScreen() {
 fun AddUserButton() {
     val queryClient = LocalQuery.current
  
-    val mutation = rememberMutation<User, NewUser>(
-        mutateFn = { params -> api.createUser(params) },
-        onSuccess = {
+    val mutation = rememberMutation<User, NewUser> {
+        mutateFn { params -> api.createUser(params) }
+        onSuccess {
             // refresh the list after a successful write
             queryClient.refetchQueries(listOf("users"), true)
-        },
-        onError = { e -> Log.e("AddUser", "Failed", e) }
-    )
+        }
+        onError { e -> Log.e("AddUser", "Failed", e) }
+    }
  
     Button(
         enabled = !mutation.loading,
@@ -229,11 +237,13 @@ fun AddUserButton() {
  
 ### Parameters
  
+`rememberMutation` is configured inside its trailing lambda. All three are required:
+ 
 | Parameter | Type | Description |
 |---|---|---|
-| `mutateFn` | `suspend (S) -> T?` | The write operation. Receives the params passed to `mutate`. |
-| `onSuccess` | `(suspend () -> Unit)?` | Called after `mutateFn` succeeds. |
-| `onError` | `(suspend (Exception) -> Unit)?` | Called when `mutateFn` throws. |
+| `mutateFn { }` | `suspend (S) -> T?` | The write operation. Receives the params passed to `mutate`. |
+| `onSuccess { }` | `suspend () -> Unit` | Called after `mutateFn` succeeds. |
+| `onError { }` | `suspend (Exception) -> Unit` | Called when `mutateFn` throws. |
  
 ---
  
@@ -271,8 +281,8 @@ Update the cache immediately, then reconcile with the server:
 ```kotlin
 val queryClient = LocalQuery.current
  
-val toggleDone = rememberMutation<Todo, Todo>(
-    mutateFn = { todo ->
+val toggleDone = rememberMutation<Todo, Todo> {
+    mutateFn { todo ->
         // optimistic update
         @Suppress("UNCHECKED_CAST")
         val current = queryClient.getCache(listOf("todos")) as? List<Todo> ?: emptyList()
@@ -281,10 +291,10 @@ val toggleDone = rememberMutation<Todo, Todo>(
             current.map { if (it.id == todo.id) todo.copy(done = !todo.done) else it }
         )
         api.toggleTodo(todo.id)
-    },
-    onSuccess = { queryClient.refetchQueries(listOf("todos"), true) },
-    onError = { queryClient.refetchQueries(listOf("todos"), true) } // roll back
-)
+    }
+    onSuccess { queryClient.refetchQueries(listOf("todos"), true) }
+    onError { queryClient.refetchQueries(listOf("todos"), true) } // roll back
+}
 ```
  
 ### Resetting on logout
@@ -312,6 +322,7 @@ Button(onClick = {
 - **Key stability**: query keys are compared with `equals`. Use primitives, strings, enums or data classes, not objects without value equality.
 - **`queryFn` identity**: `rememberQuery` re-subscribes and refetches when `queryKey` **or** `queryFn` changes. A lambda that captures unstable values can be recreated on recomposition and cause repeated fetches. Capture stable values, or wrap the function with `remember`.
 - **Empty results**: if `queryFn` returns `null`, `error` is set to `Exception("Empty")`.
+- **Smart casts**: `data` and `error` are public API properties declared in a different module, so Kotlin can't smart cast them after a null check (`Smart cast to 'X' is impossible, because 'data' is a public API property declared in different module`). Access them with `!!` (e.g. `query.data!!.name`) or use safe calls like `query.data?.name`.
 - **Mutation state**: `error` and `data` in `rememberMutation` are overwritten by the next run and are not cleared when a new `mutate` call starts.
 - **Invalidation arguments**: when calling through `LocalQuery.current`, pass `exact` explicitly (`refetchQueries(key, true)`).
 - **Generics**: cached values are stored as `Any?` and cast to `T` on read. Use consistent types per key.
