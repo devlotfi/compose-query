@@ -9,14 +9,25 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
-import com.devlotfi.composequery.LocalQuery
-import com.devlotfi.composequery.NotifyAction
 import com.devlotfi.composeref.rememberRef
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
+
+@DslMarker
+annotation class QueryDsl
+
+@QueryDsl
+class QueryConfig<T> {
+    var refetchOnResume: Boolean = true
+    var queryKey: List<Any?>? = null
+    internal var queryFn: (suspend () -> T?)? = null
+    fun queryFn(block: suspend () -> T?) {
+        queryFn = block
+    }
+}
 
 data class RememberQueryReturn<T>(
     val loading: Boolean,
@@ -31,11 +42,12 @@ data class RememberQueryReturn<T>(
 
 @Suppress("UNCHECKED_CAST")
 @Composable
-fun <T> rememberQuery(
-    queryFn: suspend () -> T?,
-    queryKey: List<Any?>,
-    refetchOnResume: Boolean = true
-): RememberQueryReturn<T> {
+fun <T> rememberQuery(block: QueryConfig<T>.() -> Unit): RememberQueryReturn<T> {
+    val config = QueryConfig<T>().apply(block)
+    val queryKey = requireNotNull(config.queryKey)
+    val queryFn = requireNotNull(config.queryFn)
+    val refetchOnResume = config.refetchOnResume
+
     val localQuery = LocalQuery.current
     val scope = rememberCoroutineScope()
     val jobRef = rememberRef<Job?>(null)
