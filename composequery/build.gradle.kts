@@ -5,7 +5,7 @@ plugins {
 }
 
 android {
-    namespace = "com.devlotfi.composequery"
+    namespace = "com.github.devlotfi.composequery"
     compileSdk {
         version = release(37)
     }

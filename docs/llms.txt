@@ -1,0 +1,14 @@
+# compose-query
+
+> `compose-query` is a server-state management library for Jetpack Compose, inspired by TanStack Query. It provides declarative data fetching, in-memory caching, loading and error state, refetching, and mutations.
+
+## Documentation
+
+- [Documentation overview](https://devlotfi.github.io/compose-query/intro.md): Project overview, features, mental model, and links to the guides.
+- [Getting started](https://devlotfi.github.io/compose-query/getting-started.md): Requirements, creating and providing a `QueryClient`, and first query and mutation examples.
+- [Queries](https://devlotfi.github.io/compose-query/queries.md): Query configuration, returned state, query keys, parameter handling, refetching, reset, and threading.
+- [Mutations](https://devlotfi.github.io/compose-query/mutations.md): Mutation configuration and state, callbacks, mutation keys, error handling, and examples for common write operations.
+- [QueryClient and cache](https://devlotfi.github.io/compose-query/query-client-and-cache.md): Client and cache structure, query invalidation, direct cache access, manual updates, and lifecycle behavior.
+- [Recipes](https://devlotfi.github.io/compose-query/recipes.md): Practical patterns for CRUD, refresh, search, pagination, dependent and parallel queries, optimistic updates, and testing.
+- [API reference](https://devlotfi.github.io/compose-query/api-reference.md): Public classes, properties, functions, configuration options, and Compose side effects.
+- [Caveats and limitations](https://devlotfi.github.io/compose-query/caveats-and-limitations.md): Important behavior, unsupported features, limitations, and workarounds.
