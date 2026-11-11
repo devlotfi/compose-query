@@ -10,7 +10,8 @@ class QueryCache {
 }
 ```
 
-In-memory map from query key to last successful value. Public and mutable. Not thread-safe (use from the main thread).
+In-memory map from query key to last successful value. Public and mutable. Not thread-safe (use from
+the main thread).
 
 ## `QueryClient`
 
@@ -31,7 +32,8 @@ class QueryClient(val scope: CoroutineScope, val cache: QueryCache)
 | `refetchQueries` | `fun (queryKey: List<Any?>, exact: Boolean = true)` | Background refetch of matching registered queries. |
 | `resetQueries` | `fun (queryKey: List<Any?>, exact: Boolean = true)` | Clear cache + data, then refetch matching queries. |
 
-Matching: `exact = true` matches the key itself if registered; `exact = false` matches every registered key that **starts with** `queryKey` (an empty list matches all).
+Matching: `exact = true` matches the key itself if registered; `exact = false` matches every
+registered key that **starts with** `queryKey` (an empty list matches all).
 
 ## `QueryClient.rememberQuery`
 
@@ -66,8 +68,10 @@ It is a `data class`, so it supports destructuring, but named access is clearer.
 ### Side effects performed by `rememberQuery`
 
 - `SideEffect`: keeps `queryFn` up to date with the latest lambda.
-- `LaunchedEffect(queryKey)`: calls `fetchQuery()` on entering composition and whenever the key changes.
-- `LifecycleEventEffect(ON_RESUME)`: calls `refetch()` if `refetchOnResume` (the first resume is skipped).
+- `LaunchedEffect(queryKey)`: calls `fetchQuery()` on entering composition and whenever the key
+  changes.
+- `LifecycleEventEffect(ON_RESUME)`: calls `refetch()` if `refetchOnResume` (the first resume is
+  skipped).
 
 ## `QueryData<T>`
 
@@ -88,7 +92,9 @@ class QueryData<T>(
 | `fetchInteractively()` | Sets `interactiveFetching = true`, then `fetchQuery()`. |
 | `reset()` | Removes the cache entry, sets `data = null`, then `fetchQuery()`. |
 
-Fetch flow: `error = null` → `fetching = true` → `loading = (data == null)` → run `queryFn` → on `null` result set `error = Exception("Empty")`, otherwise set `data` → in `finally`, if this is still the latest request, clear `fetching`, `interactiveFetching` and `loading`.
+Fetch flow: `error = null` → `fetching = true` → `loading = (data == null)` → run `queryFn` → on
+`null` result set `error = Exception("Empty")`, otherwise set `data` → in `finally`, if this is
+still the latest request, clear `fetching`, `interactiveFetching` and `loading`.
 
 ## `QueryClient.rememberMutation`
 
@@ -129,8 +135,7 @@ fun <T, S> QueryClient.rememberMutation(block: MutationConfig<T, S>.() -> Unit):
 
 ## Other types
 
-| Type | Description |
-|---|---|
-| `EntryKey` | Small interface with `getKey(key, property)` helper, implemented by the `RememberInQueryClient` delegates. Internal plumbing. |
-| `QueryDsl`, `MutationDsl` | `@DslMarker` annotations preventing accidental access to an outer config from a nested block. |
+| Type                                                                    | Description |
+|-------------------------------------------------------------------------|---|
+| `EntryKey`                                                              | Small interface with `getKey(key, property)` helper, impl emented by the `RememberInQueryClient` delegates. Internal plumbing. || `QueryDsl`, `MutationDsl`                                               | `@DslMarker` annotations preventing accidental access to an outer config from a nested block. |
 | `QueryData.RememberInQueryClient`, `MutationData.RememberInQueryClient` | `ReadOnlyProperty` delegates that look up the data object in the client on each read. |

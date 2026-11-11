@@ -22,10 +22,10 @@ import com.github.devlotfi.composequery.rememberMutation
 
 The `QueryClient` needs two things:
 
-| Parameter | Purpose |
-|---|---|
+| Parameter               | Purpose                                                                                                                             |
+|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------|
 | `scope: CoroutineScope` | Where all fetches and mutations run. Use `viewModelScope` so work survives rotation and is cancelled when the ViewModel is cleared. |
-| `cache: QueryCache` | Where the last successful result of each key is stored. |
+| `cache: QueryCache`     | Where the last successful result of each key is stored.                                                                             |
 
 ```kotlin
 class AppViewModel : ViewModel() {
@@ -53,7 +53,9 @@ val appModule = module {
 }
 ```
 
-> **Tip:** Scope the ViewModel to the Activity (or navigation graph) if you want one shared client and cache for the whole app. Scope it to a single screen if you want the cache to die with that screen.
+> **Tip:** Scope the ViewModel to the Activity (or navigation graph) if you want one shared client
+> and cache for the whole app. Scope it to a single screen if you want the cache to die with that
+> screen.
 
 ## 3. Provide the client to your composables
 
@@ -96,25 +98,25 @@ data class Todo(val id: Int, val title: String, val done: Boolean)
 
 @Composable
 fun TodosScreen() {
-    val queryClient = LocalQueryClient.current
+  val queryClient = LocalQueryClient.current
 
-    val todos = queryClient.rememberQuery<List<Todo>> {
-        queryKey = listOf("todos")
-        queryFn { api.getTodos() }
-    }
+  val todos = queryClient.rememberQuery<List<Todo>> {
+    queryKey = listOf("todos")
+    queryFn { api.getTodos() }
+  }
 
-    when {
-        todos.loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
-            CircularProgressIndicator()
-        }
-        todos.data == null -> Column {
-            Text("Something went wrong: ${todos.error?.message}")
-            Button(onClick = todos.refetch) { Text("Retry") }
-        }
-        else -> LazyColumn {
-            items(todos.data!!, key = { it.id }) { TodoRow(it) }
-        }
+  when {
+    todos.loading -> Box(Modifier.fillMaxSize(), Alignment.Center) {
+      CircularProgressIndicator()
     }
+    todos.data == null -> Column {
+      Text("Something went wrong: ${todos.error?.message}")
+      Button(onClick = todos.refetch) { Text("Retry") }
+    }
+    else -> LazyColumn {
+      items(todos.data!!, key = { it.id }) { TodoRow(it) }
+    }
+  }
 }
 ```
 
@@ -122,7 +124,8 @@ What happens:
 
 1. On first composition, a fetch starts and `loading = true`.
 2. When `queryFn` returns, `data` is set, written to the cache, and `loading = false`.
-3. If you leave and return, cached data shows **immediately** (`loading = false`) while a background refetch runs (`fetching = true`).
+3. If you leave and return, cached data shows **immediately** (`loading = false`) while a background
+   refetch runs (`fetching = true`).
 4. If the app goes to the background and comes back, the query refetches automatically.
 
 > **Always specify the type argument** (`rememberQuery<List<Todo>>`) so Kotlin can infer `T`.
@@ -132,27 +135,27 @@ What happens:
 ```kotlin
 @Composable
 fun AddTodoButton() {
-    val queryClient = LocalQueryClient.current
+  val queryClient = LocalQueryClient.current
 
-    val addTodo = queryClient.rememberMutation<Todo, String> {
-        mutateKey = listOf("addTodo")
-        mutateFn { title -> api.createTodo(title) }
-        onSuccess {
-            queryClient.refetchQueries(listOf("todos"))
-        }
-        onError { e ->
-            Log.e("Todos", "Failed to add todo", e)
-        }
+  val addTodo = queryClient.rememberMutation<Todo, String> {
+    mutateKey = listOf("addTodo")
+    mutateFn { title -> api.createTodo(title) }
+    onSuccess {
+      queryClient.refetchQueries(listOf("todos"))
     }
-
-    Button(
-        onClick = { addTodo.mutate("Buy milk") },
-        enabled = !addTodo.loading,
-    ) {
-        Text(if (addTodo.loading) "Adding..." else "Add todo")
+    onError { e ->
+      Log.e("Todos", "Failed to add todo", e)
     }
+  }
 
-    addTodo.error?.let { Text("Error: ${it.message}", color = MaterialTheme.colorScheme.error) }
+  Button(
+    onClick = { addTodo.mutate("Buy milk") },
+    enabled = !addTodo.loading,
+  ) {
+    Text(if (addTodo.loading) "Adding..." else "Add todo")
+  }
+
+  addTodo.error?.let { Text("Error: ${it.message}", color = MaterialTheme.colorScheme.error) }
 }
 ```
 
